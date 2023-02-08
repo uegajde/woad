@@ -2,9 +2,80 @@ import matplotlib.pyplot as plt
 from matplotlib.cm import get_cmap
 import numpy as np
 from wrf import getvar, latlon_coords, extract_times
-from woad import diagkit, plotkit, actkit
+from woad import diagkit, plotkit, actkit, mathkit
 import cartopy.crs as crs
 import cmaps as nclcmaps
+
+
+def plot_contourf_skip_zero(ax, var, lons, lats, cLevInterval=None, cbarTicks=None, vmax=None, pltcbar=True, pltbdy=True):
+    if vmax is None:
+        vmax = np.max(np.abs(var))
+
+    climMax = mathkit.ceil_nthDigit(vmax, n=2)
+    midnorm = plotkit.MidpointNormalize(vmin=-climMax, vcenter=0, vmax=climMax)
+
+    if cLevInterval is None:
+        cLevInterval = mathkit.ceil_nthDigit(climMax/6, n=2)
+        if cLevInterval < 1:
+            cLevInterval = mathkit.ceil_nthDigit(climMax/6, n=1)
+
+    temp = np.arange(cLevInterval, climMax, cLevInterval)
+    levels = np.sort(np.unique(np.concatenate([-temp, temp, [-climMax, climMax]])))
+    levels = levels[levels != 0]
+
+    #
+    contours_0 = ax.contourf(lons, lats, var,
+                             levels=levels[levels < 0],
+                             vmin=-climMax, vmax=climMax,
+                             cmap='bwr', norm=midnorm,
+                             extend='min',
+                             transform=crs.PlateCarree())
+
+    contours_1 = ax.contourf(lons, lats, var,
+                             levels=levels[levels > 0],
+                             vmin=-climMax, vmax=climMax,
+                             cmap='bwr', norm=midnorm,
+                             extend='max',
+                             transform=crs.PlateCarree())
+
+    if pltcbar:
+        if cbarTicks is None:
+            cbarTicks = levels
+        contours_for_cbar = ax.contourf(lons[0:2, 0:2], lats[0:2, 0:2],
+                                        np.array([[-climMax, climMax], [climMax, -climMax]]),
+                                        levels=levels,
+                                        vmin=-climMax, vmax=climMax,
+                                        cmap='bwr', norm=midnorm,
+                                        transform=crs.PlateCarree())
+        cbar = plt.colorbar(contours_for_cbar, ax=ax, pad=.05, ticks=levels)
+        cbar.ax.tick_params(labelsize=12)
+        cbar.set_ticks(ticks=cbarTicks, update_ticks=True)
+    else:
+        cbar = None
+
+    if pltbdy:
+        ax.plot(lons[0, :], lats[0, :], linestyle='dashed', linewidth=2, color=[0.75, 0.75, 0.75], alpha=0.6, transform=crs.PlateCarree())
+        ax.plot(lons[-1, :], lats[-1, :], linestyle='dashed', linewidth=2, color=[0.75, 0.75, 0.75], alpha=0.6, transform=crs.PlateCarree())
+        ax.plot(lons[:, 0], lats[:, 0], linestyle='dashed', linewidth=2, color=[0.75, 0.75, 0.75], alpha=0.6, transform=crs.PlateCarree())
+        ax.plot(lons[:, -1], lats[:, -1], linestyle='dashed', linewidth=2, color=[0.75, 0.75, 0.75], alpha=0.6, transform=crs.PlateCarree())
+
+    #
+    ax.set_extent([np.min(lons), np.max(lons), np.min(lats), np.max(lats)])
+
+    #
+    gl = ax.gridlines(crs=crs.PlateCarree(), alpha=0.5,
+                      linestyle='--', draw_labels=True,
+                      x_inline=False, y_inline=False)
+    gl.top_labels = False
+    gl.right_labels = False
+
+    #
+    pltObj = {"diff_contours_positive": contours_1,
+              "diff_contours_negative": contours_0,
+              "cbar": cbar,
+              "gl": gl}
+
+    return pltObj
 
 
 def plot_cloudTopTemp_gray(ax, ncfile, trimLonLat=None, plotcbar=False):

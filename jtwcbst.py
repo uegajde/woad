@@ -7,7 +7,7 @@ from woad import parameter as parm
 column_names = ["BASIN", "CY", "Time", "TECHNUM", "TECH", "TAU", "Lat", "Lon", "VMAX", "MSLP",
                 "TY", "RAD", "WINDCODE", "RAD1", "RAD2", "RAD3", "RAD4", "RADP", "RRP", "MRD",
                 "GUSTS", "EYE", "SUBREGION", "MAXSEAS", "INITIALS", "DIR", "SPEED", "STORMNAME", "DEPTH", "SEAS", "SEASCODE"]
-# column name: https://www.usno.navy.mil/NOOC/nmfc-ph/RSS/jtwc/best_tracks/wpindex.php
+# column name: https://www.metoc.navy.mil/jtwc/jtwc.html?best-tracks
 
 
 def read(JTWC_BestTrackFile, parse_Lat=True, parse_Lon=True, parse_Time=True, knot2ms_VMAX=True):

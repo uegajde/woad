@@ -14,6 +14,10 @@ from woad import actkit
 from woad import diagkit
 
 
+states = NaturalEarthFeature(category='cultural', scale='50m',
+                             facecolor='none',
+                             name='admin_1_states_provinces_shp')
+                                 
 def main(infile, outcsv, figName, inilat, inilon, maxwsShRadius=2, angleInterval=5, radiusesEnd=350000, radiusesInterval=1000):
     # to import the csv data, use 'pd.read_csv(outcsv, parse_dates=[0], infer_datetime_format=True)'
     # basic variables
@@ -64,8 +68,9 @@ def main(infile, outcsv, figName, inilat, inilon, maxwsShRadius=2, angleInterval
     # plot figure of diagnose result
     if figName.lower() not in parm.denyStr:
         # cut data
-        slp_cutted = actkit.trim_data_xarray(slp, trimLonLat=[tccLon-5, tccLon+5, tccLat-5, tccLat+5])
-        wspd10m_cutted = actkit.trim_data_xarray(wspd10m,  trimLonLat=[tccLon-5, tccLon+5, tccLat-5, tccLat+5])
+        trimLonLat = [tccLon-4.5, tccLon+4.5, tccLat-4, tccLat+4]
+        slp_cutted = actkit.trim_data_xarray(slp, trimLonLat=trimLonLat)
+        wspd10m_cutted = actkit.trim_data_xarray(wspd10m,  trimLonLat=trimLonLat)
 
         cart_proj = crs.LambertConformal(central_longitude=tccLon, central_latitude=tccLat)
         cart_proj_polar = crs.AzimuthalEquidistant(central_longitude=tccLon, central_latitude=tccLat)
@@ -75,26 +80,24 @@ def main(infile, outcsv, figName, inilat, inilon, maxwsShRadius=2, angleInterval
         ax_meanws10 = fig.add_axes([1/1.5, 0.6, 0.4/1.5, 0.3])
         ax_cycoords = fig.add_axes([1/1.5, 0.1, 0.4/1.5, 0.4], projection=cart_proj_polar)
 
-        ax_slp_ws10m.set_title('10m windspeed', fontsize=16)
-        ax_meanws10.set_title('10m windspeed (azimuthal mean)', fontsize=16)
-        ax_cycoords.set_title('polor coords', fontsize=16)
+        ax_slp_ws10m.set_title('10m windspeed ans slp', fontsize=14)
+        ax_meanws10.set_title('azimuthal mean 10m ws', fontsize=14)
+        ax_cycoords.set_title('polor coords', fontsize=14)
 
         plt_slp_ws10m(ax_slp_ws10m, slp_cutted, wspd10m_cutted, tccLon, tccLat, maxws10Lon, maxws10Lat, rmw, r34, midproduct)
-        plt_meanws10_by_dist(ax_meanws10, midproduct)
+        plt_meanws10_by_dist(ax_meanws10, rmw, r34, maxAzws10, midproduct)
         plt_cycoords(ax_cycoords, midproduct)
 
         timeinfo = np.datetime_as_string(nctime, timezone='UTC', unit='s')
         plt.text(0.02, 0.96, timeinfo, fontsize=14, transform=plt.gcf().transFigure)
-        plt.text(0.02, 0.02, infile, fontsize=14, transform=plt.gcf().transFigure)
+        plt.text(0.02, 0.02, infile, fontsize=10, transform=plt.gcf().transFigure)
 
         fig.savefig(figName, dpi=150)
 
 
 def plt_slp_ws10m(ax, slp, wspd10m, tccLon, tccLat, maxws10Lon, maxws10Lat, rmw, r34, midproduct):
     lats, lons = latlon_coords(slp)
-    states = NaturalEarthFeature(category='cultural', scale='50m',
-                                 facecolor='none',
-                                 name='admin_1_states_provinces_shp')
+
     ax.add_feature(states, linewidth=0.5, edgecolor='black')
     ax.coastlines('50m', linewidth=0.8)
 
@@ -113,17 +116,17 @@ def plt_slp_ws10m(ax, slp, wspd10m, tccLon, tccLat, maxws10Lon, maxws10Lat, rmw,
     ax.contour(to_np(lons), to_np(lats), to_np(slp),
                colors='b', alpha=0.5,
                levels=levels, transform=crs.PlateCarree())
+    levels = np.arange(855, 1055, 10)
+    ax.contour(to_np(lons), to_np(lats), to_np(slp),
+               colors='b', alpha=0.3,
+               levels=levels, transform=crs.PlateCarree())
 
     # plot tc center and rmw
     ax.plot(tccLon, tccLat, 'xk', transform=crs.PlateCarree())
     ax.scatter(maxws10Lon, maxws10Lat, color='none', edgecolor='black', transform=crs.PlateCarree())
 
     # adjust range of lon lat
-    lonMin = tccLon-3.5
-    lonMax = tccLon+3.5
-    latMin = tccLat-3
-    latMax = tccLat+3
-    ax.set_extent([lonMin, lonMax, latMin, latMax], crs=crs.PlateCarree())
+    ax.set_extent([tccLon-3.5, tccLon+3.5, tccLat-3, tccLat+3], crs=crs.PlateCarree())
 
     gl = ax.gridlines(crs=crs.PlateCarree(), alpha=0.5,
                       linestyle='--', draw_labels=True,
@@ -156,11 +159,28 @@ def plt_slp_ws10m(ax, slp, wspd10m, tccLon, tccLat, maxws10Lon, maxws10Lat, rmw,
                 color=[0.0, 0.0, 0.0], alpha=0.5, transform=crs.PlateCarree())
 
 
-def plt_meanws10_by_dist(ax, midproduct):
-    ax.plot([0, 400], [34*parm.knot2ms, 34*parm.knot2ms], linestyle='--', color='#3c79c8')
-    ax.plot([0, 400], [64*parm.knot2ms, 64*parm.knot2ms], linestyle='--', color='#3ce682')
-    ax.plot([0, 400], [100*parm.knot2ms, 100*parm.knot2ms], linestyle='--', color='#e6323b')
+def plt_meanws10_by_dist(ax, rmw, r34, maxAzws10, midproduct):
+    #
+    xEnd = midproduct['radiuses'][-1]/1000
+    ax.plot([0, xEnd], [34*parm.knot2ms, 34*parm.knot2ms], linestyle='--', color='#3c79c8')
+    ax.plot([0, xEnd], [64*parm.knot2ms, 64*parm.knot2ms], linestyle='--', color='#3ce682')
+    ax.plot([0, xEnd], [100*parm.knot2ms, 100*parm.knot2ms], linestyle='--', color='#e6323b')
+    ax.text(xEnd*0.8, 36*parm.knot2ms, '34 kts', color='#3c79c8')
+    ax.text(xEnd*0.8, 66*parm.knot2ms, '64 kts', color='#3ce682')
+    ax.text(xEnd*0.8, 102*parm.knot2ms, '100 kts', color='#e6323b')
 
+    #
+    if r34 > 0:
+        ax.plot([r34, r34], [0, 2], 'k')
+        ax.text(r34, 3.5, '{:d}'.format(r34), 'k', horizontalalignment='center')
+
+    ax.plot([rmw, rmw], [0, 2], 'k')
+    ax.text(rmw, 3.5, '{:d}'.format(rmw), 'k', horizontalalignment='center')
+
+    ax.plot([-5, 0], [maxAzws10, maxAzws10], 'k')
+    ax.text(0, maxAzws10, '{:.1f}'.format(maxAzws10), 'k', horizontalalignment='left')
+
+    #
     ax.plot(midproduct['radiuses']/1000, np.min(midproduct['wsInPCS'], axis=0), color='#969696')
     ax.plot(midproduct['radiuses']/1000, np.max(midproduct['wsInPCS'], axis=0), color='#969696')
     ax.plot(midproduct['radiuses']/1000, np.mean(midproduct['wsInPCS'], axis=0), color='black')
@@ -169,9 +189,9 @@ def plt_meanws10_by_dist(ax, midproduct):
     ax.set_ylabel('windspeed (m/s)', fontsize=12)
     ax.grid(alpha=0.5, linestyle='--')
 
-    ax.set_xlim(-5, 405)
+    ax.set_xlim(-5, xEnd+5)
     ax.set_ylim(0, 60)
-    ax.set_xticks(np.arange(0, 450, 50))
+    ax.set_xticks(np.arange(0, xEnd+5, 50))
     ax.set_yticks(np.arange(0, 70, 5))
 
 
