@@ -140,11 +140,11 @@ def str2direct(inStr: str):
         directStr = "symmetric"
     return directStr
 
-
-def read_a_tc_dataset(infileh):
-    if type(infileh) is str:
-        infileh = open(infileh)
-    headerStr = infileh.readline()
+def read(JMA_BestTrackFile):
+    # read_a_tc_dataset
+    if type(JMA_BestTrackFile) is str:
+        JMA_BestTrackFile = open(JMA_BestTrackFile)
+    headerStr = JMA_BestTrackFile.readline()
     header = parse_header(headerStr)
     datalines = header['datalines']
 
@@ -163,7 +163,7 @@ def read_a_tc_dataset(infileh):
     landfallJP = []
 
     for idata in range(0, datalines):
-        dataStr = infileh.readline()
+        dataStr = JMA_BestTrackFile.readline()
         dataline = parse_data(dataStr)
         time.append(dataline['time'])
         grade.append(dataline['grade'])
