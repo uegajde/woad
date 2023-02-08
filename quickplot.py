@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
 from matplotlib.cm import get_cmap
 import numpy as np
+import numpy.ma as ma
 from wrf import getvar, latlon_coords, extract_times
 from woad import diagkit, plotkit, actkit, mathkit
 import cartopy.crs as crs
@@ -288,6 +290,192 @@ def plot_rate_10mWS_aboveThreshold(ax, ncfiles, threshold, trimLonLat=None, plot
     gl.right_labels = False
 
     return probability_contourf, gl
+
+def plot_ensSpread(lat, lon, spread, mask=None, vMax=None, vGap=None, clatlon=None, titleStr=None, states=None):
+    if mask is not None:
+        spread = ma.array(spread, mask=mask, fill_value=99999.9)
+
+    lon = plotkit.unfoldLon(lon)
+    if clatlon is None:
+        clatlon = [np.sum(lat)/lat.size, np.sum(lon)/lon.size]
+    cart_proj = crs.LambertConformal(central_longitude=clatlon[1], central_latitude=clatlon[0])
+
+    if vMax is None:
+        vMax = mathkit.ceil_nthDigit(np.max(spread), np.ceil(np.log10(np.max(spread))))
+    if vGap is None:
+        vGap = vMax/10
+
+    figh = plt.figure(figsize=(8, 7))
+    ax = figh.add_axes([0.07, 0.0, 0.9, 1.0], projection=cart_proj)
+
+    if states is not None:
+        ax.add_feature(states, linewidth=0.5, edgecolor='black')
+        ax.coastlines('50m', linewidth=0.8)
+
+    spread_contours = ax.contourf(lon, lat, np.abs(spread),
+                                  levels=np.arange(vGap, vMax+vGap, vGap),
+                                  cmap=nclcmaps.WhiteBlueGreenYellowRed,
+                                  extend='both',
+                                  transform=crs.PlateCarree())
+    cbar = plt.colorbar(spread_contours, ax=ax, orientation='vertical', pad=.05)
+    cbar.ax.tick_params(labelsize=14)
+    cbar.set_ticks(ticks=mticker.FixedLocator(np.arange(0, vMax+vGap, vGap*2)), update_ticks=True)
+
+    if spread.min()<0:
+        minVal = -np.ceil(np.abs(spread.min()/vGap))*vGap
+        ax.contour(lon, lat, spread, colors='gray', levels=np.arange(minVal, vGap, vGap), transform=crs.PlateCarree())
+
+    gl = ax.gridlines(crs=crs.PlateCarree(), alpha=0.5,
+                      linestyle='--', draw_labels=False,
+                      x_inline=False, y_inline=False)
+    gl.top_labels = False
+    gl.right_labels = False
+
+    if titleStr is not None:
+        ax.set_title(titleStr, fontsize=14)
+    return figh, ax
+
+def plot_windfiled(lat, lon, u, v, vMax=None, vGap=None, qvGap=10, qvScale=None, qvNorm=False, mask=None, clatlon=None, xyExtent=None, titleStr=None, states=None):
+    if mask is not None:
+        u = ma.array(u, mask=mask, fill_value=99999.9)
+        v = ma.array(v, mask=mask, fill_value=99999.9)
+
+    windspeed = np.sqrt(u**2+v**2)
+    if vMax is None:
+        vMax = mathkit.ceil_nthDigit(np.max(windspeed), np.ceil(np.log10(np.max(windspeed))))
+    if vGap is None:
+        vGap = vMax/10
+    if qvScale is None:
+        qvScale = 25*vMax
+
+    lon = plotkit.unfoldLon(lon)
+    if clatlon is None:
+        clatlon = [np.sum(lat)/lat.size, np.sum(lon)/lon.size]
+    cart_proj = crs.LambertConformal(central_longitude=clatlon[1], central_latitude=clatlon[0])
+
+    figh = plt.figure(figsize=(8, 7))
+    ax = figh.add_axes([0.07, 0.0, 0.9, 1.0], projection=cart_proj)
+    if states is not None:
+        ax.add_feature(states, linewidth=0.5, edgecolor='black')
+        ax.coastlines('50m', linewidth=0.8)
+
+    wspd_contours = ax.contourf(lon, lat, windspeed,
+                                levels=np.arange(vGap, vMax+vGap, vGap),
+                                cmap=nclcmaps.WhiteBlueGreenYellowRed,
+                                extend='both',
+                                transform=crs.PlateCarree())
+    cbar = plt.colorbar(wspd_contours, ax=ax, orientation='vertical', pad=.05)
+    cbar.ax.tick_params(labelsize=14)
+    cbar.set_ticks(ticks=mticker.FixedLocator(np.arange(0, vMax+vGap, vGap*2)), update_ticks=True)
+
+    if qvNorm:
+        uForQV = u/np.power(windspeed, 0.5)
+        vForQV = v/np.power(windspeed, 0.5)
+    else:
+        uForQV = u
+        vForQV = v
+    ax.quiver(lon[0::qvGap, 0::qvGap], lat[0::qvGap, 0::qvGap],
+              uForQV[0::qvGap, 0::qvGap], vForQV[0::qvGap, 0::qvGap],
+              scale=qvScale,
+              transform=crs.PlateCarree())
+
+    gl = ax.gridlines(crs=crs.PlateCarree(), alpha=0.5,
+                      linestyle='--', draw_labels=False,
+                      x_inline=False, y_inline=False)
+    gl.top_labels = False
+    gl.right_labels = False
+
+    if xyExtent is not None:
+        ax.set_extent(xyExtent, crs=crs.PlateCarree())
+
+    if titleStr is not None:
+        ax.set_title(titleStr, fontsize=14)
+
+    return figh, ax
+
+def plot_cov(lat, lon, cov, mask=None, vMax=None, vGap=None, clatlon=None, titleStr=None, states=None):
+    if mask is not None:
+        cov = ma.array(cov, mask=mask, fill_value=99999.9)
+
+    lon = plotkit.unfoldLon(lon)
+    if clatlon is None:
+        clatlon = [np.sum(lat)/lat.size, np.sum(lon)/lon.size]
+    cart_proj = crs.LambertConformal(central_longitude=clatlon[1], central_latitude=clatlon[0])
+
+    if vMax is None:
+        vMax = np.max(np.abs(cov))
+        vMax = mathkit.ceil_nthDigit(vMax, np.ceil(np.log10(vMax)))
+    if vGap is None:
+        vGap = vMax/10
+    levels = np.concatenate([np.arange(-vMax, 0, vGap), np.arange(vGap, vMax+vGap, vGap)])
+
+    figh = plt.figure(figsize=(8, 7))
+    ax = figh.add_axes([0.07, 0.0, 0.9, 1.0], projection=cart_proj)
+    if states is not None:
+        ax.add_feature(states, linewidth=0.5, edgecolor='black')
+        ax.coastlines('50m', linewidth=0.8)
+
+    spread_contours = ax.contourf(lon, lat, cov,
+                                  levels=levels,
+                                  cmap=nclcmaps.ViBlGrWhYeOrRe,
+                                  extend='both',
+                                  transform=crs.PlateCarree())
+    cbar = plt.colorbar(spread_contours, ax=ax, orientation='vertical', pad=.05)
+    cbar.ax.tick_params(labelsize=14)
+    cbar.set_ticks(ticks=mticker.FixedLocator(levels), update_ticks=True)
+
+    gl = ax.gridlines(crs=crs.PlateCarree(), alpha=0.5,
+                      linestyle='--', draw_labels=False,
+                      x_inline=False, y_inline=False)
+    gl.top_labels = False
+    gl.right_labels = False
+
+    if titleStr is not None:
+        ax.set_title(titleStr, fontsize=14)
+    return figh, ax
+
+def plot_autoContourf(lat, lon, val, cmap='terrain', mask=None, vLevArgs=None, clatlon=None, titleStr=None, states=None):
+    if mask is not None:
+        val = ma.array(val, mask=mask, fill_value=99999.9)
+
+    lon = plotkit.unfoldLon(lon)
+    if clatlon is None:
+        clatlon = [np.sum(lat)/lat.size, np.sum(lon)/lon.size]
+    cart_proj = crs.LambertConformal(central_longitude=clatlon[1], central_latitude=clatlon[0])
+
+    if vLevArgs is None:
+        vMax = mathkit.ceil_nthDigit(np.max(val), np.ceil(np.log10(np.max(val))))
+        vMin = mathkit.floor_nthDigit(np.min(val), np.ceil(np.log10(np.min(val))))
+        vInterval = (vMax-vMin)/20
+    else:
+        vMax = vLevArgs[0]
+        vMin = vLevArgs[1]
+        vInterval = vLevArgs[2]
+
+    figh = plt.figure(figsize=(8, 7))
+    ax = figh.add_axes([0.07, 0.0, 0.9, 1.0], projection=cart_proj)
+    if states is not None:
+        ax.add_feature(states, linewidth=0.5, edgecolor='black')
+        ax.coastlines('50m', linewidth=0.8)
+
+    spread_contours = ax.contourf(lon, lat, val,
+                                  levels=np.arange(vMin, vMax+vInterval, vInterval),
+                                  cmap=cmap,
+                                  extend='both',
+                                  transform=crs.PlateCarree())
+    cbar = plt.colorbar(spread_contours, ax=ax, orientation='vertical', pad=.05)
+    cbar.ax.tick_params(labelsize=14)
+    cbar.set_ticks(ticks=mticker.FixedLocator(np.arange(vMin, vMax+vInterval, vInterval*2)), update_ticks=True)
+
+    gl = ax.gridlines(crs=crs.PlateCarree(), alpha=0.5,
+                      linestyle='--', draw_labels=False,
+                      x_inline=False, y_inline=False)
+    gl.top_labels = False
+    gl.right_labels = False
+
+    if titleStr is not None:
+        ax.set_title(titleStr, fontsize=14)
+    return figh, ax
 
 # def plot_lowlayer_synoptic():
 # def plot_midlayer_synoptic():
