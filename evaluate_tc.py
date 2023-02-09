@@ -42,7 +42,7 @@ def main(infile, outcsv, figName, inilat, inilon, maxwsShRadius=2, angleInterval
     maxws10, maxws10Lat, maxws10Lon = actkit.search_extreme_xarray(wspd10m, mode='max', limsh=True, cntLat=tccLat, cntLon=tccLon, radius=maxwsShRadius)
 
     # info diagnosed in cylindrical grid
-    rmw, r34, maxAzws10, midproduct = diagkit.tc_wind_InPCS(infile=infile, wspd=wspd10m, cntLat=tccLat, cntLon=tccLon,
+    rmw, r34, maxAzws10, midproduct = diagkit.tc_wind_InPCS(ncfile=ncfile, wspd=wspd10m, cntLat=tccLat, cntLon=tccLon,
                                                             angleInterval=angleInterval, radiusesEnd=radiusesEnd, radiusesInterval=radiusesInterval)
 
     # output in csv
