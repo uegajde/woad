@@ -1,4 +1,3 @@
-from netCDF4 import Dataset
 from wrf import getvar, to_np
 import numpy as np
 from woad import parameter as parm
@@ -26,13 +25,13 @@ def uv10(ncfile, roughness=0.0001, mask_height=20):
     return u10, v10
 
 
-def tc_wind_InPCS(infile: str, cntLat: float, cntLon: float, wspd=None,
+def tc_wind_InPCS(ncfile, cntLat: float, cntLon: float, wspd=None,
                   angleInterval=5, radiusesEnd=400000, radiusesInterval=1000):
     """
         rmw, r34, maxmeanws, midproduct = diagkit.tc_wind_InPCS()
 
         input:
-        infile: the path of ncfile.
+        ncfile: ncfile opened with netcdf4.Dataset().
         wspd: windspeed data taken from the wrf-py.
         cntLat: lat of tc center.
         cntLon: lon of tc center.
@@ -52,7 +51,6 @@ def tc_wind_InPCS(infile: str, cntLat: float, cntLon: float, wspd=None,
     """
 
     # process args
-    ncfile = Dataset(infile)
     if wspd is None:
         u10, v10 = uv10(ncfile)
         wspd = (u10**2+v10**2)**0.5
