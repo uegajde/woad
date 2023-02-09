@@ -141,41 +141,6 @@ def netRadialForce_pCoord(ncfile, u, v, p, z, cntLat, cntLon, plevels, angleInte
     return netRadialForce, midproduct
 
 
-# def netRadialForce_zCoord(ncfile, u, v, p, z, cntLat, cntLon, zlevels, angleInterval=5, radiusesEnd=350000, radiusesInterval=2000):
-#     f = coriolis_coefficient(cntLat)
-#     # rho =
-#     angles = np.arange(0, 360, angleInterval)
-#     radiuses = np.arange(0, radiusesEnd+radiusesInterval, radiusesInterval)
-#     radiusesForZ = np.arange(0, radiusesEnd+radiusesInterval*2, radiusesInterval)
-
-#     uInPCS, _, _ = interp_to_polarCoord3D_xarray(var=u, zVar=z, ncfile=ncfile,
-#                                         cntLat=cntLat, cntLon=cntLon,
-#                                         angles=angles, radiuses=radiuses, zlevels=zlevels)
-#     vInPCS, _, _ = interp_to_polarCoord3D_xarray(var=v, zVar=z, ncfile=ncfile,
-#                                         cntLat=cntLat, cntLon=cntLon,
-#                                         angles=angles, radiuses=radiuses, zlevels=zlevels)
-#     pInPCS, _, _ = interp_to_polarCoord3D_xarray(var=p, zVar=z, ncfile=ncfile,
-#                                         cntLat=cntLat, cntLon=cntLon,
-#                                         angles=angles, radiuses=radiusesForZ, zlevels=zlevels)
-
-#     tanWind, _ = tanRadWind_InPCS(uInPCS, vInPCS, angles)
-#     tanWindAzMean = np.mean(tanWind, 1)
-#     pAzMean = np.mean(pInPCS, 1)
-
-#     term1 = np.zeros(tanWindAzMean.shape)
-#     term1temp = -rho*(pAzMean[:, 2:]-pAzMean[:, :-2])/2
-#     term1[:, 1:] = term1temp
-
-#     term2 = np.empty(tanWindAzMean.shape)
-#     term2 = tanWindAzMean**2/radiuses
-#     term2[:, 0] = 0
-
-#     term3 = f*tanWindAzMean
-
-#     netRadialForce = term1+term2+term3
-#     return netRadialForce
-
-
 def tcc_by_pressureCentroid(p: np.ndarray, lon: np.ndarray, lat: np.ndarray, initLon, initLat, bgRad=500000, shRad=100000, maxIter=20):
     p = np.reshape(p, [p.size, 1])
     lon = np.reshape(lon, [lon.size, 1])
