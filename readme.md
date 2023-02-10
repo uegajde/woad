@@ -7,6 +7,7 @@ it is prepared for numerical weather prediction and data assimilation related ex
 * [numpy](https://numpy.org/)
 * [matplotlib](https://matplotlib.org/)
 * [scipy](https://scipy.org/)
+* [pandas](https://pandas.pydata.org/)
 * [netCDF4](http://unidata.github.io/netcdf4-python), [xarray](https://xarray.dev/)
 * [wrf-python](https://wrf-python.readthedocs.io/en/latest/)
 * [cartopy](https://scitools.org.uk/cartopy/docs/latest/)
