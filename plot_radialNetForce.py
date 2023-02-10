@@ -8,7 +8,7 @@ import matplotlib.ticker as mticker
 import cartopy.crs as crs
 import cmaps as nclcmaps
 from woad import parameter as parm
-from woad import actkit
+from woad import dpkit
 from woad import diagkit
 from woad import plotkit
 
@@ -45,15 +45,15 @@ angles = np.arange(0, 360, angleInterval)
 radiuses = np.arange(0, radiusesEnd+radiusesInterval, radiusesInterval)
 radiusesForZ = np.arange(0, radiusesEnd+radiusesInterval*2, radiusesInterval)
 
-uInPCS, _, _ = actkit.interp_to_polarCoord3D_xarray(var=u, zVar=p, ncfile=ncfile,
-                                                    cntLat=tccLat, cntLon=tccLon,
-                                                    angles=angles, radiuses=radiuses, zlevels=plevels)
-vInPCS, _, _ = actkit.interp_to_polarCoord3D_xarray(var=v, zVar=p, ncfile=ncfile,
-                                                    cntLat=tccLat, cntLon=tccLon,
-                                                    angles=angles, radiuses=radiuses, zlevels=plevels)
-zInPCS, _, _ = actkit.interp_to_polarCoord3D_xarray(var=z, zVar=p, ncfile=ncfile,
-                                                    cntLat=tccLat, cntLon=tccLon,
-                                                    angles=angles, radiuses=radiusesForZ, zlevels=plevels)
+uInPCS, _, _ = dpkit.interp_to_polarCoord3D_xarray(var=u, zVar=p, ncfile=ncfile,
+                                                   cntLat=tccLat, cntLon=tccLon,
+                                                   angles=angles, radiuses=radiuses, zlevels=plevels)
+vInPCS, _, _ = dpkit.interp_to_polarCoord3D_xarray(var=v, zVar=p, ncfile=ncfile,
+                                                   cntLat=tccLat, cntLon=tccLon,
+                                                   angles=angles, radiuses=radiuses, zlevels=plevels)
+zInPCS, _, _ = dpkit.interp_to_polarCoord3D_xarray(var=z, zVar=p, ncfile=ncfile,
+                                                   cntLat=tccLat, cntLon=tccLon,
+                                                   angles=angles, radiuses=radiusesForZ, zlevels=plevels)
 
 tanWind, _ = diagkit.tanRadWind_InPCS(uInPCS, vInPCS, angles)
 tanWindAzMean = np.mean(tanWind, 1)
@@ -90,7 +90,7 @@ def plot_force_radiusHeight(ax, datain, zmax=None, zinterval=0.5):
     levels = np.arange(-zmax, zmax+zinterval, zinterval)
     midnorm = plotkit.MidpointNormalize(vmin=-zmax, vcenter=0, vmax=zmax)
 
-    smth_data = actkit.smooth_2DArray(datain, cntWeight=1, rndWeight=1, loop=1)
+    smth_data = dpkit.smooth_2DArray(datain, cntWeight=1, rndWeight=1, loop=1)
 
     contourfh = ax.contourf(radiuses/1000, plevels, smth_data*3600, levels=levels, cmap='bwr', norm=midnorm)
     cbar = plt.colorbar(contourfh, ax=ax)
@@ -112,8 +112,8 @@ def plt_tand_rad_wind(ax, u, v, minusMean):
     angles = np.arange(0, 360, 5)
     radiuses = np.arange(0, radiusesEnd+radiusesInterval, radiusesInterval)
 
-    uInPCS, latInPCS, lonInPCS = actkit.interp_to_polarCoord2D_xarray(u, ncfile, tccLat, tccLon, angles, radiuses)
-    vInPCS, _, _ = actkit.interp_to_polarCoord2D_xarray(v, ncfile, tccLat, tccLon, angles, radiuses)
+    uInPCS, latInPCS, lonInPCS = dpkit.interp_to_polarCoord2D_xarray(u, ncfile, tccLat, tccLon, angles, radiuses)
+    vInPCS, _, _ = dpkit.interp_to_polarCoord2D_xarray(v, ncfile, tccLat, tccLon, angles, radiuses)
 
     if minusMean:
         uInPCS = uInPCS-np.nanmean(uInPCS)
@@ -161,7 +161,7 @@ def plot_z(ax, z):
     angles = np.arange(0, 360, 5)
     radiuses = np.arange(0, radiusesEnd+radiusesInterval, radiusesInterval)
 
-    zInPCS, latInPCS, lonInPCS = actkit.interp_to_polarCoord2D_xarray(z, ncfile, tccLat, tccLon, angles, radiuses)
+    zInPCS, latInPCS, lonInPCS = dpkit.interp_to_polarCoord2D_xarray(z, ncfile, tccLat, tccLon, angles, radiuses)
     zInPCS = zInPCS-zInPCS[0, 0]
     zInPCS = np.concatenate([np.reshape(zInPCS[-1, :], [1, len(zInPCS[-1, :])]), zInPCS])
     latInPCS = np.concatenate([np.reshape(latInPCS[-1, :], [1, len(latInPCS[-1, :])]), latInPCS])
@@ -191,7 +191,7 @@ def plot_z(ax, z):
 # %% diagnostic plot
 
 if plot_diagnostic:
-    pbottom = np.floor(actkit.search_extreme_xarray(p[0, :, :], mode='min', limsh=True, cntLat=inilat, cntLon=inilon, radius=tccShRadius)[0])
+    pbottom = np.floor(dpkit.search_extreme_xarray(p[0, :, :], mode='min', limsh=True, cntLat=inilat, cntLon=inilon, radius=tccShRadius)[0])
 
     #
     width = 15.8

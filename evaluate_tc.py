@@ -10,14 +10,14 @@ import matplotlib.ticker as mticker
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 from woad import parameter as parm
-from woad import actkit
+from woad import dpkit
 from woad import diagkit
 
 
 states = NaturalEarthFeature(category='cultural', scale='50m',
                              facecolor='none',
                              name='admin_1_states_provinces_shp')
-                                 
+
 def main(infile, outcsv, figName, inilat, inilon, maxwsShRadius=2, angleInterval=5, radiusesEnd=350000, radiusesInterval=1000):
     # to import the csv data, use 'pd.read_csv(outcsv, parse_dates=[0], infer_datetime_format=True)'
     # basic variables
@@ -32,14 +32,14 @@ def main(infile, outcsv, figName, inilat, inilon, maxwsShRadius=2, angleInterval
     lat = np.array(ncfile['XLAT'])[0, :, :]
 
     # locate tc center by the min-slp
-    minslp, minslpLat, minslpLon = actkit.search_extreme_xarray(slp, mode='min', limsh=True, cntLat=inilat, cntLon=inilon, radius=4)
+    minslp, minslpLat, minslpLon = dpkit.search_extreme_xarray(slp, mode='min', limsh=True, cntLat=inilat, cntLon=inilon, radius=4)
 
     # locate tc center by the min-slp
     tccLon, tccLat = diagkit.tcc_by_pressureCentroid(to_np(slp), lon, lat, minslpLon, minslpLat, maxIter=100)
-    tccslp = actkit.interp_2d_to_point_lonlat_3plinear(to_np(slp), lon, lat, tccLon, tccLat)
+    tccslp = dpkit.interp_2d_to_point_lonlat_3plinear(to_np(slp), lon, lat, tccLon, tccLat)
 
     # max ws10
-    maxws10, maxws10Lat, maxws10Lon = actkit.search_extreme_xarray(wspd10m, mode='max', limsh=True, cntLat=tccLat, cntLon=tccLon, radius=maxwsShRadius)
+    maxws10, maxws10Lat, maxws10Lon = dpkit.search_extreme_xarray(wspd10m, mode='max', limsh=True, cntLat=tccLat, cntLon=tccLon, radius=maxwsShRadius)
 
     # info diagnosed in cylindrical grid
     rmw, r34, maxAzws10, midproduct = diagkit.tc_wind_InPCS(ncfile=ncfile, wspd=wspd10m, cntLat=tccLat, cntLon=tccLon,
@@ -69,8 +69,8 @@ def main(infile, outcsv, figName, inilat, inilon, maxwsShRadius=2, angleInterval
     if figName.lower() not in parm.denyStr:
         # cut data
         trimLonLat = [tccLon-4.5, tccLon+4.5, tccLat-4, tccLat+4]
-        slp_cutted = actkit.trim_data_xarray(slp, trimLonLat=trimLonLat)
-        wspd10m_cutted = actkit.trim_data_xarray(wspd10m,  trimLonLat=trimLonLat)
+        slp_cutted = dpkit.trim_data_xarray(slp, trimLonLat=trimLonLat)
+        wspd10m_cutted = dpkit.trim_data_xarray(wspd10m, trimLonLat=trimLonLat)
 
         cart_proj = crs.LambertConformal(central_longitude=tccLon, central_latitude=tccLat)
         cart_proj_polar = crs.AzimuthalEquidistant(central_longitude=tccLon, central_latitude=tccLat)
@@ -148,9 +148,9 @@ def plt_slp_ws10m(ax, slp, wspd10m, tccLon, tccLat, maxws10Lon, maxws10Lat, rmw,
         r34_lat = np.empty([len(midproduct['angles'])+1])
         r34_lon = np.empty([len(midproduct['angles'])+1])
         for iangle in np.arange(0, len(midproduct['angles'])):
-            intpfunc = interp1d(midproduct['radiuses'],  midproduct['lonInPCS'][iangle, :])
+            intpfunc = interp1d(midproduct['radiuses'], midproduct['lonInPCS'][iangle, :])
             r34_lon[iangle] = intpfunc(r34)
-            intpfunc = interp1d(midproduct['radiuses'],  midproduct['latInPCS'][iangle, :])
+            intpfunc = interp1d(midproduct['radiuses'], midproduct['latInPCS'][iangle, :])
             r34_lat[iangle] = intpfunc(r34)
 
         r34_lat[-1] = r34_lat[0]

@@ -4,7 +4,7 @@ from matplotlib.cm import get_cmap
 import numpy as np
 import numpy.ma as ma
 from wrf import getvar, latlon_coords, extract_times
-from woad import diagkit, plotkit, actkit, mathkit
+from woad import diagkit, plotkit, dpkit, mathkit
 import cartopy.crs as crs
 import cmaps as nclcmaps
 
@@ -83,7 +83,7 @@ def plot_contourf_skip_zero(ax, var, lons, lats, cLevInterval=None, cbarTicks=No
 def plot_cloudTopTemp_gray(ax, ncfile, trimLonLat=None, plotcbar=False):
     ctt = getvar(ncfile, 'ctt', units='degC')
     if trimLonLat is not None:
-        ctt = actkit.trim_data_xarray(ctt, trimLonLat=trimLonLat)
+        ctt = dpkit.trim_data_xarray(ctt, trimLonLat=trimLonLat)
 
     lats, lons = latlon_coords(ctt)
 
@@ -108,7 +108,7 @@ def plot_cloudTopTemp_gray(ax, ncfile, trimLonLat=None, plotcbar=False):
 def plot_cloudTopTemp_enhanced(ax, ncfile, trimLonLat=None, plotcbar=False):
     ctt = getvar(ncfile, 'ctt', units='degC')
     if trimLonLat is not None:
-        ctt = actkit.trim_data_xarray(ctt, trimLonLat=trimLonLat)
+        ctt = dpkit.trim_data_xarray(ctt, trimLonLat=trimLonLat)
 
     lats, lons = latlon_coords(ctt)
 
@@ -135,7 +135,7 @@ def plot_cloudTopTemp_enhanced(ax, ncfile, trimLonLat=None, plotcbar=False):
 def plot_reflectivity(ax, ncfile, trimLonLat=None, plotcbar=False):
     reflect = getvar(ncfile, 'mdbz')
     if trimLonLat is not None:
-        reflect = actkit.trim_data_xarray(reflect, trimLonLat=trimLonLat)
+        reflect = dpkit.trim_data_xarray(reflect, trimLonLat=trimLonLat)
 
     lats, lons = latlon_coords(reflect)
     cmp, norm = plotkit.cmap_cwb_radar_reflec()
@@ -164,7 +164,7 @@ def plot_rainfallRate(ax, ncfileStart, ncfileEnd, trimLonLat=None, plotcbar=Fals
     accRainfallEnd = (np.array(ncfileEnd['RAINNC'])+np.array(ncfileEnd['RAINC']))[0, :, :]
 
     if trimLonLat is not None:
-        idxMinX, idxMaxX, idxMinY, idxMaxY = actkit.cal_trimed_lonlat_idx(lons, lats, trimLonLat)
+        idxMinX, idxMaxX, idxMinY, idxMaxY = dpkit.cal_trimed_lonlat_idx(lons, lats, trimLonLat)
         lons = lons[idxMinX:idxMaxX, idxMinY:idxMaxY]
         lats = lats[idxMinX:idxMaxX, idxMinY:idxMaxY]
         accRainfallStart = accRainfallStart[idxMinX:idxMaxX, idxMinY:idxMaxY]
@@ -200,7 +200,7 @@ def plot_accRainfall(ax, ncfileEnd, ncfileStart=None, trimLonLat=None, plotcbar=
         accRainfall = (np.array(ncfileEnd['RAINNC'])+np.array(ncfileEnd['RAINC']))[0, :, :]
 
     if trimLonLat is not None:
-        idxMinX, idxMaxX, idxMinY, idxMaxY = actkit.cal_trimed_lonlat_idx(lons, lats, trimLonLat)
+        idxMinX, idxMaxX, idxMinY, idxMaxY = dpkit.cal_trimed_lonlat_idx(lons, lats, trimLonLat)
         lons = lons[idxMinX:idxMaxX, idxMinY:idxMaxY]
         lats = lats[idxMinX:idxMaxX, idxMinY:idxMaxY]
         accRainfall = accRainfall[idxMinX:idxMaxX, idxMinY:idxMaxY]
@@ -234,7 +234,7 @@ def plot_rate_slp_blowThreshold(ax, ncfiles, threshold, trimLonLat=None, plotcba
     probability = probability/len(ncfiles)*100
 
     if trimLonLat is not None:
-        idxMinX, idxMaxX, idxMinY, idxMaxY = actkit.cal_trimed_lonlat_idx(lons, lats, trimLonLat)
+        idxMinX, idxMaxX, idxMinY, idxMaxY = dpkit.cal_trimed_lonlat_idx(lons, lats, trimLonLat)
         lons = lons[idxMinX:idxMaxX, idxMinY:idxMaxY]
         lats = lats[idxMinX:idxMaxX, idxMinY:idxMaxY]
         probability = probability[idxMinX:idxMaxX, idxMinY:idxMaxY]
@@ -270,7 +270,7 @@ def plot_rate_10mWS_aboveThreshold(ax, ncfiles, threshold, trimLonLat=None, plot
     probability = probability/len(ncfiles)*100
 
     if trimLonLat is not None:
-        idxMinX, idxMaxX, idxMinY, idxMaxY = actkit.cal_trimed_lonlat_idx(lons, lats, trimLonLat)
+        idxMinX, idxMaxX, idxMinY, idxMaxY = dpkit.cal_trimed_lonlat_idx(lons, lats, trimLonLat)
         lons = lons[idxMinX:idxMaxX, idxMinY:idxMaxY]
         lats = lats[idxMinX:idxMaxX, idxMinY:idxMaxY]
         probability = probability[idxMinX:idxMaxX, idxMinY:idxMaxY]
