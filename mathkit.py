@@ -20,13 +20,6 @@ def vec2diagMat(vec):
         diagMat[ix, ix] = vec[ix]
     return diagMat
 
-def vec2posDiagMat(vec):
-    vec[vec<0] = 0
-    diagMat = np.zeros([vec.size, vec.size])
-    for ix in range(vec.size):
-        diagMat[ix, ix] = vec[ix]
-    return diagMat
-
 def calc_sqrtMat_by_eigh(mat):
     # cholesky is about 10-times faster than eigh, but the result is unusable
     [w, v] = np.linalg.eigh(mat)
