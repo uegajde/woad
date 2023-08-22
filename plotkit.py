@@ -36,7 +36,7 @@ def cal_subplot_positions(rows, cols, marginTop=0.08, marginButton=0.05, marginL
         for icol in range(0, cols):
             xStart = marginLeft+icol*(horizontalGap+axWidth)
             yStart = marginButton+(cols-irow-1)*(verticalGap+axHeight)
-            positions.append([xStart, yStart, axWidth, axWidth])
+            positions.append([xStart, yStart, axWidth, axHeight])
 
     return positions
 
