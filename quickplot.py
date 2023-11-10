@@ -8,6 +8,8 @@ from woad import diagkit, plotkit, dpkit, mathkit
 import cartopy.crs as crs
 import cmaps as nclcmaps
 
+coastlinesRes = '50m'
+coastlinesLinewidth = 0.8
 
 def plot_contourf_skip_zero(ax, var, lons, lats, cLevInterval=None, cbarTicks=None, vmax=None, pltcbar=True, pltbdy=True):
     if vmax is None:
@@ -291,7 +293,7 @@ def plot_rate_10mWS_aboveThreshold(ax, ncfiles, threshold, trimLonLat=None, plot
 
     return probability_contourf, gl
 
-def plot_ensSpread(lat, lon, spread, mask=None, vMax=None, vGap=None, clatlon=None, titleStr=None, states=None):
+def plot_ensSpread(lat, lon, spread, mask=None, vMax=None, vGap=None, clatlon=None, titleStr=None, drawCoastlines=False):
     if mask is not None:
         spread = ma.array(spread, mask=mask, fill_value=99999.9)
 
@@ -307,10 +309,8 @@ def plot_ensSpread(lat, lon, spread, mask=None, vMax=None, vGap=None, clatlon=No
 
     figh = plt.figure(figsize=(8, 7))
     ax = figh.add_axes([0.07, 0.0, 0.9, 1.0], projection=cart_proj)
-
-    if states is not None:
-        ax.add_feature(states, linewidth=0.5, edgecolor='black')
-        ax.coastlines('50m', linewidth=0.8)
+    if drawCoastlines:
+        ax.coastlines(coastlinesRes, linewidth=coastlinesLinewidth)
 
     spread_contours = ax.contourf(lon, lat, np.abs(spread),
                                   levels=np.arange(vGap, vMax+vGap, vGap),
@@ -335,7 +335,7 @@ def plot_ensSpread(lat, lon, spread, mask=None, vMax=None, vGap=None, clatlon=No
         ax.set_title(titleStr, fontsize=14)
     return figh, ax
 
-def plot_windfiled(lat, lon, u, v, vMax=None, vGap=None, qvGap=10, qvScale=None, qvNorm=False, mask=None, clatlon=None, xyExtent=None, titleStr=None, states=None):
+def plot_windfiled(lat, lon, u, v, vMax=None, vGap=None, qvGap=10, qvScale=None, qvNorm=False, mask=None, clatlon=None, xyExtent=None, titleStr=None, drawCoastlines=False):
     if mask is not None:
         u = ma.array(u, mask=mask, fill_value=99999.9)
         v = ma.array(v, mask=mask, fill_value=99999.9)
@@ -355,9 +355,8 @@ def plot_windfiled(lat, lon, u, v, vMax=None, vGap=None, qvGap=10, qvScale=None,
 
     figh = plt.figure(figsize=(8, 7))
     ax = figh.add_axes([0.07, 0.0, 0.9, 1.0], projection=cart_proj)
-    if states is not None:
-        ax.add_feature(states, linewidth=0.5, edgecolor='black')
-        ax.coastlines('50m', linewidth=0.8)
+    if drawCoastlines:
+        ax.coastlines(coastlinesRes, linewidth=coastlinesLinewidth)
 
     wspd_contours = ax.contourf(lon, lat, windspeed,
                                 levels=np.arange(vGap, vMax+vGap, vGap),
@@ -393,7 +392,7 @@ def plot_windfiled(lat, lon, u, v, vMax=None, vGap=None, qvGap=10, qvScale=None,
 
     return figh, ax
 
-def plot_cov(lat, lon, cov, mask=None, vMax=None, vGap=None, clatlon=None, titleStr=None, states=None):
+def plot_cov(lat, lon, cov, mask=None, vMax=None, vGap=None, clatlon=None, titleStr=None, drawCoastlines=False):
     if mask is not None:
         cov = ma.array(cov, mask=mask, fill_value=99999.9)
 
@@ -411,9 +410,8 @@ def plot_cov(lat, lon, cov, mask=None, vMax=None, vGap=None, clatlon=None, title
 
     figh = plt.figure(figsize=(8, 7))
     ax = figh.add_axes([0.07, 0.0, 0.9, 1.0], projection=cart_proj)
-    if states is not None:
-        ax.add_feature(states, linewidth=0.5, edgecolor='black')
-        ax.coastlines('50m', linewidth=0.8)
+    if drawCoastlines:
+        ax.coastlines(coastlinesRes, linewidth=coastlinesLinewidth)
 
     spread_contours = ax.contourf(lon, lat, cov,
                                   levels=levels,
@@ -434,7 +432,7 @@ def plot_cov(lat, lon, cov, mask=None, vMax=None, vGap=None, clatlon=None, title
         ax.set_title(titleStr, fontsize=14)
     return figh, ax
 
-def plot_autoContourf(lat, lon, val, cmap='terrain', mask=None, vLevArgs=None, clatlon=None, titleStr=None, states=None):
+def plot_autoContourf(lat, lon, val, cmap='terrain', mask=None, vLevArgs=None, clatlon=None, titleStr=None, drawCoastlines=False):
     if mask is not None:
         val = ma.array(val, mask=mask, fill_value=99999.9)
 
@@ -454,9 +452,8 @@ def plot_autoContourf(lat, lon, val, cmap='terrain', mask=None, vLevArgs=None, c
 
     figh = plt.figure(figsize=(8, 7))
     ax = figh.add_axes([0.07, 0.0, 0.9, 1.0], projection=cart_proj)
-    if states is not None:
-        ax.add_feature(states, linewidth=0.5, edgecolor='black')
-        ax.coastlines('50m', linewidth=0.8)
+    if drawCoastlines:
+        ax.coastlines(coastlinesRes, linewidth=coastlinesLinewidth)
 
     spread_contours = ax.contourf(lon, lat, val,
                                   levels=np.arange(vMin, vMax+vInterval, vInterval),
