@@ -166,3 +166,42 @@ def tcc_by_pressureCentroid(p: np.ndarray, lon: np.ndarray, lat: np.ndarray, ini
                 print('info: tcc locating result not coverge perfectly for current maxIter')
 
     return newLon, newLat
+
+def temp_to_pottemp(temp_inDegK, pressure_inhPa, P0=1000, R=8.31446261815324, cp=29.07):
+    # ref: Potential temperature https://en.wikipedia.org/wiki/Potential_temperature
+    # ref: Gas constant https://en.wikipedia.org/wiki/Gas_constant
+    # ref: Specific heat capacity https://en.wikipedia.org/wiki/Table_of_specific_heat_capacities
+    return temp_inDegK*(P0/pressure_inhPa)**(R/cp)
+
+def saturationVaporPressure(temp_inDegC):
+    # based on Arden Buck equation: https://en.wikipedia.org/wiki/Arden_Buck_equation
+    # Psvapor_inhPa is the saturation vapor pressure in hPa
+    # temp_inDegC is the air temperature in degrees Celsius
+    Psvapor_inhPa = 6.1121*np.exp((18.678-temp_inDegC/234.5)*(temp_inDegC/(257.14+temp_inDegC)))
+    Psvapor_inhPa_Ice = 6.1115*np.exp((23.036-temp_inDegC/333.7)*(temp_inDegC/(279.82+temp_inDegC)))
+    if type(temp_inDegC) == np.ndarray:
+        Psvapor_inhPa[temp_inDegC<0] = Psvapor_inhPa_Ice[temp_inDegC<0]
+    else:
+        if temp_inDegC < 0:
+            Psvapor_inhPa = Psvapor_inhPa_Ice
+    return Psvapor_inhPa
+
+def RH_to_specificHumidity(RH_inPercent, temp_inDegC, pressure_inhPa):
+    # ref: https://zh.wikipedia.org/wiki/%E6%B9%BF%E5%BA%A6
+    MoleWater = 18.01528
+    MoleDryAir = 28.9634
+    Pvapor = saturationVaporPressure(temp_inDegC)*RH_inPercent
+    temp = MoleWater/MoleDryAir*Pvapor
+    q = temp/(pressure_inhPa-Pvapor+temp)
+    return q
+
+def RH_to_dewPointTemp(RH_inPercent, temp_inDegC, method='Magnus'):
+    if method=='Magnus':
+        # based on Magnus formula: https://en.wikipedia.org/wiki/Dew_point
+        b = 18.678
+        c = 257.14
+        r = np.log(RH_inPercent/100)+(b*temp_inDegC)/(c+temp_inDegC)
+        Td = (c*r)/(b-r)
+    else:
+        raise(ValueError("got an unsupported method"))
+    return Td
