@@ -197,10 +197,25 @@ def cal_trimed_lonlat_idx(lon, lat, trimLonLat):
     idxMaxY, idxMaxX = lon.shape
 
     for iter in np.arange(4):
-        idxMinYLoc = np.where(np.max(lat, axis=1) < (trimLonLat[2]))[0][-1]
-        idxMaxYLoc = np.where(np.min(lat, axis=1) > (trimLonLat[3]))[0][0]
-        idxMinXLoc = np.where(np.max(lon, axis=0) < (trimLonLat[0]))[0][-1]
-        idxMaxXLoc = np.where(np.min(lon, axis=0) > (trimLonLat[1]))[0][0]
+        try:
+            idxMinYLoc = np.where(np.max(lat, axis=1) < (trimLonLat[2]))[0][-1]
+        except:
+            idxMinYLoc = 0
+
+        try:
+            idxMaxYLoc = np.where(np.min(lat, axis=1) > (trimLonLat[3]))[0][0]
+        except:
+            idxMaxYLoc = lon.shape[0]
+        
+        try:
+            idxMinXLoc = np.where(np.max(lon, axis=0) < (trimLonLat[0]))[0][-1]
+        except:
+            idxMinXLoc = 0
+
+        try:
+            idxMaxXLoc = np.where(np.min(lon, axis=0) > (trimLonLat[1]))[0][0]
+        except:
+            idxMaxXLoc = lon.shape[1]
 
         lat = lat[idxMinYLoc:idxMaxYLoc+1, idxMinXLoc:idxMaxXLoc+1]
         lon = lon[idxMinYLoc:idxMaxYLoc+1, idxMinXLoc:idxMaxXLoc+1]
