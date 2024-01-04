@@ -37,7 +37,7 @@ def calc_residual(data_raw, data_a, data_d):
     residual = []
     residual.append(data_raw[0:yLen, 0:xLen]-data_a[0][0:yLen, 0:xLen]-data_d[0][0:yLen, 0:xLen])
 
-    for ilev in range(1, 10):
+    for ilev in range(len(data_a)):
         full = data_a[ilev-1][0:yLen, 0:xLen]
         estimate = data_a[ilev][0:yLen, 0:xLen]+data_d[ilev][0:yLen, 0:xLen]
         residual.append(full-estimate)
