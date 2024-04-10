@@ -14,7 +14,9 @@ def floor_nthDigit(num, n):
     return np.floor(num/(10**np.floor(log10(num)-(n-1))))*(10**np.floor(log10(num)-(n-1)))
 
 
-def vec2diagMat(vec):
+def vec2diagMat(vec, makeAllPositive=False):
+    if makeAllPositive:
+        vec[vec<0] = 0
     diagMat = np.zeros([vec.size, vec.size])
     for ix in range(vec.size):
         diagMat[ix, ix] = vec[ix]
@@ -32,7 +34,7 @@ def calc_sqrtMat_by_eigh(mat):
 
 def calc_invMat_by_eigh(mat):
     [w, v] = np.linalg.eigh(mat)
-    wInvMat = vec2diagMat(w**-1)
+    wInvMat = vec2diagMat(w**-1, makeAllPositive=True)
     invMat = v @ wInvMat @ v.T
     return invMat
 
