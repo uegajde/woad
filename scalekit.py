@@ -151,7 +151,7 @@ def _ATMOS_DIAGNOSTIC_CARTESC_get_vel(DENS, MOMX, MOMY, MOMZ):
 
     # V
     V[0, :, :] = MOMY[0, :, :] / DENS[0, :, :]
-    V[1:xLen, :, :] = 0.5 * (MOMY[0:xLen-1, :, :]+MOMY[1:xLen, :, :]) / DENS[1:xLen, :, :]
+    V[1:yLen, :, :] = 0.5 * (MOMY[0:yLen-1, :, :]+MOMY[1:yLen, :, :]) / DENS[1:yLen, :, :]
 
     # W
     # confusing: MOMZ in restart-output is [y,x,zh] instead [y,x,z] (zh=z+1)
